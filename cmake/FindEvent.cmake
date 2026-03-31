@@ -14,9 +14,9 @@ if (Event_INCLUDE_DIRS AND Event_LIBRARIES)
   set(Event_FIND_QUIETLY TRUE)
 endif (Event_INCLUDE_DIRS AND Event_LIBRARIES)
 
-find_path(Event_INCLUDE_DIRS event.h PATHS ${_EventIncDir} PATH_SUFFIXES event)
+find_path(Event_INCLUDE_DIRS event.h PATHS ${_EventIncDir} PATH_SUFFIXES event /opt/homebrew/include /usr/local/include)
 
-find_library(Event_LIBRARIES NAMES event PATHS ${_EventLinkDir})
+find_library(Event_LIBRARIES NAMES event PATHS ${_EventLinkDir} /opt/homebrew/lib /usr/local/lib)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Event DEFAULT_MSG Event_INCLUDE_DIRS Event_LIBRARIES)

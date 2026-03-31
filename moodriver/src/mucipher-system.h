@@ -71,8 +71,10 @@
 
 #define ICONV_IN char **
 
+#ifdef HAVE_EPOLL_CTL
 #define HAVE_EPOLL_CTL 1
 #include <sys/epoll.h>
+#endif
 
 #define HAVE_SIGNAL_H 1
 #include <signal.h>

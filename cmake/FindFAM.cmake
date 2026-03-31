@@ -5,6 +5,11 @@
 # FAM_INCLUDE_DIR - the fam include directory
 # FAM_LIBRARIES - libfam library
 
+if(APPLE)
+  # FAM (File Alteration Monitor) is a Linux feature. Disable on macOS.
+  set(FAM_FOUND 0 CACHE BOOL "FAM not supported on macOS")
+  message(STATUS "FAM not supported on macOS, disabling")
+else()
 FIND_PATH(FAM_INCLUDE_DIR fam.h )
 FIND_LIBRARY(FAM_LIBRARIES NAMES fam )
 
@@ -34,4 +39,6 @@ ELSE(FAM_INCLUDE_DIR AND FAM_LIBRARIES)
 ENDIF(FAM_INCLUDE_DIR AND FAM_LIBRARIES)
 
 MARK_AS_ADVANCED(FAM_INCLUDE_DIR FAM_LIBRARIES)
+endif()
+
 

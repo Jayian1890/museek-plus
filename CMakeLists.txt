@@ -1,10 +1,17 @@
 project(museek-plus)
 
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 enable_language(CXX)
+
+# macOS/Homebrew defaults
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum macOS version")
+    list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew" "/usr/local")
+endif()
+
 
 # Include some cmake checks.
 include(CheckIncludeFiles)
@@ -15,7 +22,13 @@ include(CheckCXXSourceCompiles)
 include(GNUInstallDirs)
 
 # Enable NewNet's smart-pointer debugging capabilities.
-add_definitions(-DNN_PTR_DEBUG -DNN_PTR_DEBUG_ASSERT)
+if(NOT APPLE)
+    add_definitions(-DNN_PTR_DEBUG -DNN_PTR_DEBUG_ASSERT)
+else()
+    # Keep NN_PTR_DEBUG but disable assertions on macOS by default
+    add_definitions(-DNN_PTR_DEBUG)
+endif()
+
 
 message("DECLARATIONS:
 Package options: EVERYTHING, MURMUR, MUCOUS, PYTHON_CLIENTS, PYTHON_BINDINGS

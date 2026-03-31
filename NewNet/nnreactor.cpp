@@ -46,7 +46,12 @@ NewNet::Reactor::Reactor()
     // The maximum available can be modified in /etc/security/limits.conf (changing nofile parameter for your user)
     struct rlimit rl;
     if (getrlimit(RLIMIT_NOFILE, &rl) == 0) {
+#ifdef __APPLE__
+        // macOS caps rlim_cur; clamp to a safe maximum to avoid errors
+        rl.rlim_cur = (rl.rlim_max == RLIM_INFINITY) ? 10240 : std::min(rl.rlim_max, (rlim_t)10240);
+#else
         rl.rlim_cur = rl.rlim_max;
+#endif
         setrlimit(RLIMIT_NOFILE, &rl);
     }
 
