@@ -200,9 +200,11 @@ void
 Museek::IfaceManager::addInProcessIface(IfaceSocket * iface)
 {
   if(!iface) return;
+  NNLOG("museekd.iface.debug", "Adding in-process iface %p", iface);
   iface->setAuthenticated(true);
   iface->setMask(EM_CHAT | EM_PRIVATE | EM_TRANSFERS | EM_USERINFO | EM_USERSHARES | EM_INTERESTS | EM_CONFIG | EM_DEBUG);
   m_Ifaces.push_back(iface);
+  NNLOG("museekd.iface.debug", "Now have %zu ifaces", m_Ifaces.size());
 }
 
 void

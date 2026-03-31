@@ -59,7 +59,7 @@ namespace NewNet
         registered callbacks get called. */
     virtual ~Object()
     {
-      m_GuardObject.emit(this);
+      m_GuardObject.fire(this);
 #ifdef NN_PTR_DEBUG
  #ifdef NN_PTR_DEBUG_ASSERT
       assert(m_RefCounter.count() == 0);

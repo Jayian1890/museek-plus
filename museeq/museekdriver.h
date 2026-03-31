@@ -40,6 +40,9 @@ public:
 	void connectToHost(const QString&, quint16, const QString&);
 	void connectToUnix(const QString& path, const QString& password);
 
+	// Entry point for raw bytes from an in-process Iface
+	void processIncomingRawBytes(const unsigned char* data, size_t len);
+
 signals:
 	void hostFound();
 	void connected();
@@ -177,8 +180,8 @@ public slots:
 protected:
 	void send(const MuseekMessage&);
 
-	// Entry point for raw bytes from an in-process Iface
-	void processIncomingRawBytes(const unsigned char* data, size_t len);
+	// Centralized handler for parsed messages (mtype and data list)
+	void handleMessage(unsigned int mtype, const QList<unsigned char>& data);
 
 protected slots:
 	void dataReady();

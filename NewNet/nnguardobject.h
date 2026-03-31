@@ -24,6 +24,11 @@
 #include <vector>
 #include <algorithm>
 
+#ifdef emit
+#  undef emit
+#  define NEWNET_RESTORE_EMIT
+#endif
+
 namespace NewNet
 {
   class Object;
@@ -58,7 +63,7 @@ namespace NewNet
     }
 
 #ifndef DOXYGEN_UNDOCUMENTED
-    void emit(Object * p)
+    void fire(Object * p)
     {
       std::vector<Callback *>::iterator it, end = m_Callbacks.end();
       for(it = m_Callbacks.begin(); it != end; ++it)
@@ -95,5 +100,10 @@ namespace NewNet
     std::vector<Callback *> m_Callbacks;
   };
 }
+
+#ifdef NEWNET_RESTORE_EMIT
+#  undef NEWNET_RESTORE_EMIT
+#  define emit
+#endif
 
 #endif // NEWNET_GUARDOBJECT_H

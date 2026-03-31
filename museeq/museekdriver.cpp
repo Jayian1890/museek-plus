@@ -24,13 +24,29 @@
 #include "museekmessages.h"
 #include "embed_museekd.h"
 
+// Qt defines the token 'emit' as a macro expanding to nothing. NewNet
+// uses a method named 'emit' in GuardObject which breaks when 'emit' is
+// already a macro. Undefine 'emit' around NewNet includes and then
+// restore it (as an empty macro) afterwards so Qt signalling still works.
+#ifdef emit
+#  undef emit
+#  define MUSEEQ_UNDEF_EMIT
+#endif
+
 #include <museekd/ifacemanager.h>
 #include <museekd/ifacesocket.h>
 #include <NewNet/nnbuffer.h>
 
+#ifdef MUSEEQ_UNDEF_EMIT
+#  undef MUSEEQ_UNDEF_EMIT
+#  /* restore Qt's 'emit' macro as an empty macro for signal syntax */
+#  define emit
+#endif
+
 #include <QList>
 #include <vector>
 #include <cstring>
+#include <QDebug>
 
 // Helper to convert NewNet::Buffer to QList<unsigned char>
 static QList<unsigned char> bufferToQList(const NewNet::Buffer & b) {
@@ -75,10 +91,12 @@ void MuseekDriver::connectToHost(const QString& host, quint16 port, const QStrin
     if(embedded) {
         mPassword = password;
         mHaveSize = false;
+        qDebug() << "MuseekDriver: using embedded museekd at" << (void*)embedded;
         // create in-proc iface and register it
         InProcIface * iface = new InProcIface(this);
         embedded->ifaces()->addInProcessIface(iface);
         mInprocIface = iface;
+        qDebug() << "MuseekDriver: registered in-process iface" << (void*)iface;
         emit hostFound();
         emit connected();
         return;
@@ -469,128 +487,6 @@ void MuseekDriver::handleMessage(unsigned int mtype, const QList<unsigned char>&
     }
 }
 
-void MuseekDriver::dataReady() {
-
-	while (mSocket) {
-		if(! mHaveSize) {
-			if(mSocket->bytesAvailable() < 4)
-				break;
-
-			unsigned char buf[4];
-			if(mSocket->read((char *)buf, 4) != 4)
-				printf("FAILURE TO READ MsgType\n");
-
-			mHaveSize = true;
-			mMsgSize = 0;
-
-			for(int i = 0; i < 4; i++)
-				mMsgSize += buf[i] << (i * 8);
-		}
-
-		if(mSocket->bytesAvailable() < mMsgSize)
-			break;
-
-		readMessage();
-	}
-}
-
-void MuseekDriver::send(const MuseekMessage& m) {
-const QList<unsigned char>& data = m.data();
-
-// If an in-process iface exists, deliver directly to the daemon
-if(mInprocIface) {
-NewNet::Buffer buf;
-// first 4 bytes: message type (little-endian)
-uint32_t t = m.MType();
-unsigned char tb[4];
-tb[0] = t & 0xff; tb[1] = (t >> 8) & 0xff; tb[2] = (t >> 16) & 0xff; tb[3] = (t >> 24) & 0xff;
-buf.append(tb, 4);
-// append payload
-for(int i = 0; i < data.size(); ++i) {
-unsigned char c = data.at(i);
-buf.append(&c, 1);
-}
-
-// Entry point for raw bytes from an in-process Iface
-void MuseekDriver::processIncomingRawBytes(const unsigned char* data, size_t len) {
-if(len < 4) return;
-uint32_t msglen = (uint32_t)data[0] | ((uint32_t)data[1] << 8) | ((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 24);
-if(len < 4 + msglen) return; // incomplete
-if(msglen < 4) return; // must contain type
-
-const unsigned char* payload = data + 4;
-uint32_t mtype = (uint32_t)payload[0] | ((uint32_t)payload[1] << 8) | ((uint32_t)payload[2] << 16) | ((uint32_t)payload[3] << 24);
-const unsigned char* body = payload + 4;
-size_t bodylen = msglen - 4;
-
-QList<unsigned char> qdata;
-for(size_t i = 0; i < bodylen; ++i) qdata.push_back(body[i]);
-
-handleMessage(mtype, qdata);
-}
-
-mInprocIface->processIncoming(buf);
-return;
-}
-
-if(! mSocket) { return; }
-const QList<unsigned char>& d = m.data();
-
-uint i = d.size() + 4;
-// Message length
-for(uint j = 0; j < 4; ++j) {
-mSocket->putChar(i & 0xff);
-i = i >> 8;
-}
-// Message type
-i = m.MType();
-for(uint j = 0; j < 4; ++j) {
-mSocket->putChar(i & 0xff);
-i = i >> 8;
-}
-
-// Message Data
-QList<unsigned char>::ConstIterator it = d.begin();
-for(; it != d.end(); ++it) {
-mSocket->putChar(*it);
-}
-}
-
-void MuseekDriver::doSayChatroom(const QString& room, const QString& line) {
-	send(NSayChatroom(room, line));
-}
-
-void MuseekDriver::doSendPrivateMessage(const QString& user, const QString& msg) {
-	send(NPrivateMessage(user, msg));
-}
-
-void MuseekDriver::doMessageBuddies(const QString& message) {
-	send(NMessageBuddies(message));
-}
-
-void MuseekDriver::doMessageDownloadingUsers(const QString& message) {
-	send(NMessageDownloading(message));
-}
-
-void MuseekDriver::doMessageUsers(const QString& message, const QStringList& users) {
-	send(NMessageUsers(users, message));
-}
-
-	connect(mSocket, SIGNAL(readyRead()), SLOT(dataReady()));
-    mSocket->setSocketDescriptor(sock);
-#else
-	emit error(QAbstractSocket::ConnectionRefusedError);
-#endif
-}
-
-void MuseekDriver::disconnect() {
-	if(mSocket) {
-		mSocket->disconnect();
-		mSocket->deleteLater();
-		mSocket = 0;
-		emit connectionClosed();
-	}
-}
 
 void MuseekDriver::readMessage() {
 	mHaveSize = false;
@@ -988,6 +884,24 @@ mSocket->putChar(*it);
 
 void MuseekDriver::doSayChatroom(const QString& room, const QString& line) {
 	send(NSayChatroom(room, line));
+}
+
+// Entry point for raw bytes from an in-process Iface
+void MuseekDriver::processIncomingRawBytes(const unsigned char* data, size_t len) {
+	if(len < 4) return;
+	uint32_t msglen = (uint32_t)data[0] | ((uint32_t)data[1] << 8) | ((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 24);
+	if(len < 4 + msglen) return; // incomplete
+	if(msglen < 4) return; // must contain type
+
+	const unsigned char* payload = data + 4;
+	uint32_t mtype = (uint32_t)payload[0] | ((uint32_t)payload[1] << 8) | ((uint32_t)payload[2] << 16) | ((uint32_t)payload[3] << 24);
+	const unsigned char* body = payload + 4;
+	size_t bodylen = msglen - 4;
+
+	QList<unsigned char> qdata;
+	for(size_t i = 0; i < bodylen; ++i) qdata.push_back(body[i]);
+
+	handleMessage(mtype, qdata);
 }
 
 void MuseekDriver::doSendPrivateMessage(const QString& user, const QString& msg) {
