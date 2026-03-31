@@ -516,7 +516,7 @@ Museek::PeerSocket::initiateOurself()
     HInitiate handshake(museekd()->server()->username(), type(), token());
     sendMessage(handshake.make_network_packet());
 
-    m_CannotConnectOurselfCallback = cannotConnectEvent.connect(this, & PeerManager::onCannotConnectOurself);
+    m_CannotConnectOurselfCallback = cannotConnectEvent.connect(museekd()->peers(), & PeerManager::onCannotConnectOurself);
 
     uint port = museekd()->peers()->peerFactory()->serverSocket()->listenPort();
 

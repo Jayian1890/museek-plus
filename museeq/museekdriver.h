@@ -30,6 +30,8 @@
 
 class MuseekMessage;
 
+namespace Museek { class IfaceSocket; }
+
 class MuseekDriver : public QObject {
 	Q_OBJECT
 public:
@@ -175,6 +177,9 @@ public slots:
 protected:
 	void send(const MuseekMessage&);
 
+	// Entry point for raw bytes from an in-process Iface
+	void processIncomingRawBytes(const unsigned char* data, size_t len);
+
 protected slots:
 	void dataReady();
 	void readMessage();
@@ -185,6 +190,9 @@ private:
 	uint mMsgSize;
 	QString mPassword;
 	CipherContext mContext;
+
+	// In-process interface when embedded
+	Museek::IfaceSocket* mInprocIface;
 };
 
 #endif // MUSEEKDRIVER_H

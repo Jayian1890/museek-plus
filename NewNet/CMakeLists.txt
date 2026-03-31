@@ -27,9 +27,13 @@ if(Event_LIBRARIES AND EVENT_FOUND)
 
     add_library(NewNet STATIC ${NEWNET_SOURCES})
 
+    # Export libevent include dir to consumers so headers using <event.h> compile
+    target_include_directories(NewNet PUBLIC ${Event_INCLUDE_DIRS})
+
     # Link the newnet binary to some libraries.
     target_link_libraries(
         NewNet
+        PUBLIC
         ${Event_LIBRARIES}
         )
 else()

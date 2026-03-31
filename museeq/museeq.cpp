@@ -46,6 +46,11 @@
 #include <QFileInfo>
 #include <QUrl>
 
+#include <thread>
+#include <cstdlib>
+#include <museekd/museekd.h>
+#include "embed_museekd.h"
+
 using std::string;
 Museeq::Museeq(QApplication * app)
       : QObject(0), mApplication(app), mConnected(false) {
@@ -54,6 +59,9 @@ Museeq::Museeq(QApplication * app)
 #endif // HAVE_QTSCRIPT
 
 	museeq = this;
+	// Attempt to start an embedded museekd daemon in-process.
+	// This is a best-effort operation: failures fall back to remote mode.
+	start_embedded_museekd();
 	mDriver = new MuseekDriver(this, "driver");
 	mUsetray = false;
 	mLogRooms = mLogPrivate = false;

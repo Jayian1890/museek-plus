@@ -15,11 +15,11 @@ if(WIN32 AND NOT CYGWIN)
     set(OS_LIBRARIES ${OS_LIBRARIES} ole32 shell32)
 endif()
 
-# Select some source files.
-set(MUSEEKD_SOURCES
+# Select some source files. Separate library sources from the standalone main.
+set(MUSEEKD_LIB_SOURCES
     codesetmanager.cpp  ifacemanager.cpp     peermanager.cpp
     configmanager.cpp   ifacesocket.cpp      peersocket.cpp
-    main.cpp             servermanager.cpp
+    servermanager.cpp
     downloadmanager.cpp messageprocessor.cpp sharesdatabase.cpp
     downloadsocket.cpp  museekd.cpp          ticketsocket.cpp
     handshakesocket.cpp networkmessage.cpp   usersocket.cpp
@@ -27,12 +27,13 @@ set(MUSEEKD_SOURCES
     distributedsocket.cpp
     )
 
-# Build the museekd binary.
-add_executable(museekd ${MUSEEKD_SOURCES})
+# Build the museekd library (for embedding into the GUI)
+add_library(museekd_lib STATIC ${MUSEEKD_LIB_SOURCES})
 
-# Link the museekd binary to some libraries.
+# Link the museekd library to some libraries and propagate to consumers
 target_link_libraries(
-    museekd
+    museekd_lib
+    PUBLIC
     Mucipher
     Muhelp
     ${NEWNET_LIBRARIES}
@@ -41,6 +42,12 @@ target_link_libraries(
     ${ICONV_LIBRARIES}
     ${OS_LIBRARIES}
     )
+
+# Build the standalone museekd binary (keeps original behavior)
+set(MUSEEKD_MAIN_SOURCES main.cpp)
+add_executable(museekd ${MUSEEKD_MAIN_SOURCES})
+# Link standalone binary to the library
+target_link_libraries(museekd PRIVATE museekd_lib)
 
 # Install the museekd binary to the 'bin' directory.
 install(

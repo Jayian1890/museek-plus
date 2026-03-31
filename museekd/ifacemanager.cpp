@@ -197,6 +197,15 @@ Museek::IfaceManager::removeListener(const std::string & path)
 }
 
 void
+Museek::IfaceManager::addInProcessIface(IfaceSocket * iface)
+{
+  if(!iface) return;
+  iface->setAuthenticated(true);
+  iface->setMask(EM_CHAT | EM_PRIVATE | EM_TRANSFERS | EM_USERINFO | EM_USERSHARES | EM_INTERESTS | EM_CONFIG | EM_DEBUG);
+  m_Ifaces.push_back(iface);
+}
+
+void
 Museek::IfaceManager::onLog(const NewNet::Log::LogNotify * log)
 {
   SEND_MASK(EM_DEBUG, IDebugMessage(log->domain, log->message));

@@ -57,6 +57,24 @@ Museek::IfaceSocket::sendMessage(const NewNet::Buffer & buffer)
 }
 
 void
+Museek::IfaceSocket::processIncoming(const NewNet::Buffer & buffer)
+{
+  // The buffer is expected to contain a 4-byte type followed by payload.
+  if(buffer.count() < 4)
+    return;
+
+  MessageData md;
+  md.socket = this;
+  // read type (little-endian)
+  const unsigned char * d = buffer.data();
+  md.type = d[0] | (d[1] << 8) | (d[2] << 16) | (d[3] << 24);
+  md.length = (uint32)buffer.count() - 4;
+  md.data = buffer.data() + 4;
+
+  onMessageReceived(&md);
+}
+
+void
 Museek::IfaceSocket::onMessageReceived(const MessageData * data)
 {
   if((! authenticated()) && (data->type != 2))

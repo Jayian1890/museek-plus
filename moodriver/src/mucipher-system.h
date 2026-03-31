@@ -71,8 +71,7 @@
 
 #define ICONV_IN char **
 
-#ifdef HAVE_EPOLL_CTL
-#define HAVE_EPOLL_CTL 1
+#if defined(HAVE_EPOLL_CTL) && !defined(__APPLE__)
 #include <sys/epoll.h>
 #endif
 

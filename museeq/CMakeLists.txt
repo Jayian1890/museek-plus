@@ -111,6 +111,7 @@ set(MUSEEQ_SOURCES
     onlinealert.cpp
     prefix.c
     privatechat.cpp
+    embed_museekd.cpp
     privatechats.cpp
     publicchat.cpp
     recommendsitem.cpp
@@ -219,7 +220,7 @@ add_executable(museeq ${QM_FILES} ${MUSEEQ_SOURCES} ${MUSEEQ_MOC_HEADERS})
 
 qt5_use_modules( museeq Core Widgets Network LinguistTools Script UiTools )
 
-target_link_libraries(museeq Mucipher)
+target_link_libraries(museeq museekd_lib Mucipher)
 
 install(
     TARGETS museeq

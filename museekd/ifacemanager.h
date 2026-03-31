@@ -70,6 +70,9 @@ namespace Museek
 
     void sendNewSearchToAll(const std::string & query, uint token);
 
+    // Add an in-process IfaceSocket (used for embedding a GUI directly into the daemon).
+    void addInProcessIface(IfaceSocket * iface);
+
   private:
     bool addListener(const std::string & path);
     void removeListener(const std::string & path);

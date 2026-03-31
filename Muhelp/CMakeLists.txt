@@ -17,9 +17,21 @@ set(MUHELP_SOURCES
 
 add_library(Muhelp STATIC ${MUHELP_SOURCES})
 
-# Link the Muhelp library to some libraries.
+# Export libxml++ include dirs to consumers
+if(LIBXMLPP_INCLUDE_DIRS)
+    target_include_directories(Muhelp PUBLIC ${LIBXMLPP_INCLUDE_DIRS})
+endif()
+
+# Export libxml++ library dirs to consumers (so linker can find xml++)
+if(LIBXMLPP_LIBRARY_DIRS)
+    target_link_directories(Muhelp PUBLIC ${LIBXMLPP_LIBRARY_DIRS})
+endif()
+
+# Link the Muhelp library to some libraries and propagate them to consumers
+# so final executables that link Muhelp get the required libs.
 target_link_libraries(
     Muhelp
+    PUBLIC
     NewNet
     ${LIBXML2_LIBRARIES}
     ${LIBXMLPP_LIBRARIES}

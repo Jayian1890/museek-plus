@@ -60,6 +60,30 @@ if(FAM_LIBRARIES AND FAM_FOUND)
         DESTINATION bin
         )
     message("--> muscand (FAM-based file scanning daemon) will be installed.")
+elseif(APPLE)
+    # On macOS, prefer a kqueue-based muscand implementation; fall back to poll if kqueue not desired.
+    set(MUSCAND_KQUEUE_SOURCES
+        muscand_kqueue.cc
+        ${TOOLS_SOURCES}
+        )
+    add_executable(muscand ${MUSCAND_KQUEUE_SOURCES})
+    target_link_libraries(
+        muscand
+        Muhelp
+        ${ZLIB_LIBRARIES}
+        ${VORBIS_LIBRARIES}
+        ${ICONV_LIBRARIES}
+        ${OS_LIBRARIES}
+        )
+    set(MANPAGES
+        ${MANPAGES}
+        muscand.1
+        )
+    install(
+        TARGETS muscand
+        DESTINATION bin
+        )
+    message("--> muscand (kqueue-based for macOS) will be installed.")
 else()
     message("!!! muscand will NOT be installed.")
 endif()

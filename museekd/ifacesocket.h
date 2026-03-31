@@ -76,7 +76,10 @@ namespace Museek
       return m_CipherContext;
     }
 
-    void sendMessage(const NewNet::Buffer & message);
+    virtual void sendMessage(const NewNet::Buffer & message);
+
+    // Process an incoming interface packet (type + payload) without using a network socket.
+    void processIncoming(const NewNet::Buffer & buffer);
 
     void onCannotConnect(NewNet::ClientSocket *);
 
